@@ -20,6 +20,16 @@ void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
 }
 
+String web_processor(const String& var) {
+  if (var == "IP") {
+    return getIP();
+  } else if (var == "TXTDESC1") {
+    return String(trayNames[1]);
+  } else {
+    return "pending development";
+  }
+}
+
 String processor(const String& var) {
   if (var == "IP") {
     return getIP();
@@ -439,6 +449,10 @@ String processor(const String& var) {
 void webroute() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);
+  });
+  
+  server.on("/web", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/web.html", String(), false, web_processor);
   });
 
   server.on("/webcmd.html", HTTP_GET, [](AsyncWebServerRequest * request) {
