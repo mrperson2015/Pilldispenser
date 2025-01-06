@@ -1,12 +1,8 @@
 # Project Setup Document
 ## Introduction
-- Brief overview of the project.
-- Purpose of the setup document (e.g., to help contributors or users prepare their environment to run or develop the project).
-- Mention supported platforms (e.g., Windows, macOS, Linux).
+- To help contributors or users prepare their environment to run or develop the project.
 
 ## Prerequisites
-- Hardware Requirements (if applicable):
-    - Minimum RAM, CPU, disk space, or other hardware-specific needs.
 - Software Requirements:
     - Operating system compatibility (e.g., "Tested on Windows 10, macOS Ventura, and Ubuntu 22.04").
     - Required tools or software (e.g., Python, Node.js, Java, Docker).
@@ -36,9 +32,15 @@
         - Instructions for creating or editing the configuration file.
 
 ## Setting Up Development Tools
+
+| Software    | Version | Link                                                   |
+|:------------|--------:|--------------------------------------------------------|
+| Arduino IDE |  1.8.18 | https://www.arduino.cc/en/software/OldSoftwareReleases |
 - Recommended IDEs or editors (e.g., VSCode, IntelliJ).
 - List required extensions or plugins (e.g., Prettier, ESLint).
 - Code formatting or linting instructions.
+
+
 
 ## Verifying the Setup
 - How to test that the setup is correct.
