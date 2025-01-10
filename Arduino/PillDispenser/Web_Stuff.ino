@@ -20,11 +20,44 @@ void notFound(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
 }
 
+String getAlertTime(const int& tray) {
+  int hour = trayHours[tray];
+  int minute = trayMin[tray];
+  char timeInput[64];
+  snprintf(timeInput, sizeof(timeInput), "%02d:%02d", hour, minute);
+  return String(timeInput);
+}
+
+String mytest(const int& trayInstallCount) {
+  String result = "<table border='1'>\n";
+  result += "<tr><th>Tray Number</th><th>Name</th><th>Alert Time</th><th>Color</th><th>Alerting</th></tr>\n";
+  String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
+
+  for (int i = 0; i < trayInstallCount; ++i) {
+    result += "<tr style=\"background-color: " + String(colors[trayColor[i+1]]) + ";\">";
+    result +=   "<td>" + String(i + 1)                     + "</td>"; //tray number
+    result +=   "<td>" + String(trayNames[i+1])            + "</td>"; //tray name/description
+    result +=   "<td>" + String(getAlertTime(i+1))         + "</td>"; //alert time
+    result +=   "<td>" + String(colors[trayColor[i+1]])    + "</td>"; //color
+    result +=   "<td>" + String(traytriggered[i+1])        + "</td>"; //in alert
+    result += "</tr>\n";
+  }
+
+  result += "</table>\n";
+  return result;
+}
+
 String web_processor(const String& var) {
   if (var == "IP") {
     return getIP();
   } else if (var == "TXTDESC1") {
     return String(trayNames[1]);
+  } else if (var == "TIMEBOX1"){
+    int hour =  trayHours[1];
+    int minute = trayMin[1];
+    char timeInput[64];
+    snprintf(timeInput, sizeof(timeInput), "%02d:%02d", hour, minute);
+    return String(timeInput);
   } else {
     return "pending development";
   }
@@ -453,6 +486,10 @@ void webroute() {
   
   server.on("/web", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/web.html", String(), false, web_processor);
+  });
+  
+  server.on("/mytest", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/html", mytest(installedTrays));
   });
 
   server.on("/webcmd.html", HTTP_GET, [](AsyncWebServerRequest * request) {
