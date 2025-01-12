@@ -28,22 +28,84 @@ String getAlertTime(const int& tray) {
   return String(timeInput);
 }
 
+String styles = R"(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pill Dispenser Web Portal</title>
+  <style>
+    @keyframes flashRed {0%, 100% {background-color: red;} 50% {background-color: white;}}
+    @keyframes flashMagenta {0%, 100% {background-color: magenta;} 50% {background-color: white;}}
+    @keyframes flashViolet {0%, 100% {background-color: violet;} 50% {background-color: white;}}
+    @keyframes flashBlue {0%, 100% {background-color: blue;} 50% {background-color: white;}}
+    @keyframes flashCyan {0%, 100% {background-color: cyan;} 50% {background-color: white;}}
+    @keyframes flashGreen {0%, 100% {background-color: green;} 50% {background-color: white;}}
+    @keyframes flashYellow {0%, 100% {background-color: yellow;} 50% {background-color: white;}}
+    @keyframes flashOrange {0%, 100% {background-color: orange;} 50% {background-color: white;}}
+    .button {
+      background-color: #4CAF50; /* Green background */
+      color: white;             /* White text */
+      padding: 10px 20px;       /* Padding for size */
+      border: none;             /* No border */
+      border-radius: 5px;       /* Rounded corners */
+      cursor: pointer;          /* Pointer cursor on hover */
+      font-size: 16px;          /* Font size */
+      transition: background-color 0.3s ease;} /* Smooth hover effect */
+    .button:hover {background-color: #45a049;} /* Darker green on hover */
+    .button:active {background-color: #3e8e41;} /* Even darker green on click */
+  </style>
+)";
+  
 String mytest(const int& trayInstallCount) {
-  String result = "<table border='1'>\n";
-  result += "<tr><th>Tray Number</th><th>Name</th><th>Alert Time</th><th>Color</th><th>Alerting</th></tr>\n";
+  String result = styles; // Includes CSS styles
+  result += "<table border='1'>\n";
+  result += "<tr><th>Tray</th><th>Name</th><th>Alert Time</th><th>Color</th><th>Alerting</th><th>Dispensed</th><th>Action</th></tr>\n";
   String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
 
   for (int i = 0; i < trayInstallCount; ++i) {
-    result += "<tr style=\"background-color: " + String(colors[trayColor[i+1]]) + ";\">";
-    result +=   "<td>" + String(i + 1)                     + "</td>"; //tray number
-    result +=   "<td>" + String(trayNames[i+1])            + "</td>"; //tray name/description
-    result +=   "<td>" + String(getAlertTime(i+1))         + "</td>"; //alert time
-    result +=   "<td>" + String(colors[trayColor[i+1]])    + "</td>"; //color
-    result +=   "<td>" + String(traytriggered[i+1])        + "</td>"; //in alert
-    result += "</tr>\n";
-  }
+    if (traytriggered[i+1]) {
+      // Row in alert state with flashing animation
+      result += "<tr style=\"animation: flash" + colors[trayColor[i+1]] + " 2.5s linear infinite;\">";
+    } else {
+      // Row not in alert state, static background color
+      result += "<tr style=\"background-color: " + String(colors[trayColor[i+1]]) + ";\">";
+    };
+    // Tray data columns
+    result += "<td>" + String(i + 1)                  + "</td>"; //tray number
+    result += "<td>" + String(trayNames[i+1])         + "</td>"; //tray name/description
+    result += "<td>" + String(getAlertTime(i+1))      + "</td>"; //alert time
+    result += "<td>" + String(colors[trayColor[i+1]]) + "</td>"; //color
+    result += "<td>" + String(traytriggered[i+1])     + "</td>"; //in alert
 
+    // Show Dispense/Dismiss Status
+    if (traydisptoday[i + 1]) {
+      result += "<td>&#9989;</td>"; //dispensed <!-- ✅ Unicode in Hex -->
+    } else if (traydismtoday[i + 1]) {
+      result += "<td>&#x274E;</td>"; //dismissed <!-- ❎ Unicode in Hex -->
+    } else {
+      result += "<td></td>";
+    }
+    
+    // Dispsense Button
+    if (traytriggered[i + 1] || !trayAlertEna[i + 1]) {
+      result += "<td><button onclick=\"dispense(" + String(i + 1) + ")\">Dispense</button></td>";
+    } else {
+      result += "<td></td>"; // Placeholder for non-alerting rows
+    }
+  }
+  result += "</tr>\n";
   result += "</table>\n";
+
+  // Add JavaScript function to handle dispense action
+  result += R"rawliteral(
+    <script>
+      function dispense(tray) {
+        fetch(`/dropout?tray=${tray}`);
+      }
+    </script>
+  )rawliteral";
+  
   return result;
 }
 
