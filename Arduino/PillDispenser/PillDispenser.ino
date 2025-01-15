@@ -35,7 +35,7 @@
 #define SAMPLE_RATE 16000 // Adjust based on your WAV file
 #define DAC_CHANNEL 26 // GPIO 26
 #define LED_PIN    16  // Use GPIO16
-#define NUM_LEDS   2  // Number of LEDs in your strip
+#define NUM_LEDS   1  // Number of LEDs in your strip
 
 // declaration
 String versionnumber = "v.1.8";
@@ -113,6 +113,10 @@ DFRobotDFPlayerMini myDFPlayer;
 WiFiClientSecure secured_client;
 UniversalTelegramBot* bot = nullptr;
 
+// Log callback function
+void my_print(const char *buf) {
+    Serial.println(buf); // Print logs to Serial Monitor
+}
 
 void setup() {
   Serial.begin( 115200 );
