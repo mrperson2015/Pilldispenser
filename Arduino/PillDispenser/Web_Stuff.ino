@@ -27,6 +27,31 @@ String getAlertTime(const int& tray) {
   snprintf(timeInput, sizeof(timeInput), "%02d:%02d", hour, minute);
   return String(timeInput);
 }
+// Define the size of the dictionary
+const int COLOR_COUNT = 8;
+// Define colors
+const String colorNames[COLOR_COUNT] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
+// Define RGBA colors with 70% opacity
+// --order must match the corresponding color from colors[] above
+const String colorLightNames[COLOR_COUNT] = {
+  "rgba(255, 0  , 0  , 0.4)", // Red
+  "rgba(255, 0  , 255, 0.4)", // Magenta
+  "rgba(238, 130, 238, 0.4)", // Violet
+  "rgba(0  , 0  , 255, 0.4)", // Blue
+  "rgba(0  , 255, 255, 0.4)", // Cyan
+  "rgba(0  , 255, 0  , 0.4)", // Green
+  "rgba(255, 255, 0  , 0.4)", // Yellow
+  "rgba(255, 165, 0  , 0.4)"  // Orange
+};
+
+String getRGBAFromLightColor(const String& colorName) {
+    for (int i = 0; i < COLOR_COUNT; ++i) {
+        if (colorNames[i] == colorName) {
+            return colorLightNames[i]; // Return the corresponding RGBA value
+        }
+    }
+    return "rgba(0, 0, 0, 0.4)"; // Default to black with 40% opacity if not found
+}
 
 String styles = R"(
 <!DOCTYPE html>
@@ -35,67 +60,70 @@ String styles = R"(
     <meta charset="UTF-8">
     <title>Pill Dispenser Web Portal</title>
   <style>
-    @keyframes flashRed {0%, 100% {background-color: red;} 50% {background-color: white;}}
-    @keyframes flashMagenta {0%, 100% {background-color: magenta;} 50% {background-color: white;}}
-    @keyframes flashViolet {0%, 100% {background-color: violet;} 50% {background-color: white;}}
-    @keyframes flashBlue {0%, 100% {background-color: blue;} 50% {background-color: white;}}
-    @keyframes flashCyan {0%, 100% {background-color: cyan;} 50% {background-color: white;}}
-    @keyframes flashGreen {0%, 100% {background-color: green;} 50% {background-color: white;}}
-    @keyframes flashYellow {0%, 100% {background-color: yellow;} 50% {background-color: white;}}
-    @keyframes flashOrange {0%, 100% {background-color: orange;} 50% {background-color: white;}}
-    .button {
+    table {border: 1px solid black;}
+    @keyframes flashRed     {0%, 100% {background-color: rgba(255, 0  , 0  , 0.4);} 50% {background-color: white;}}
+    @keyframes flashMagenta {0%, 100% {background-color: rgba(255, 0  , 255, 0.4);} 50% {background-color: white;}}
+    @keyframes flashViolet  {0%, 100% {background-color: rgba(238, 130, 238, 0.4);} 50% {background-color: white;}}
+    @keyframes flashBlue    {0%, 100% {background-color: rgba(0  , 0  , 255, 0.4);} 50% {background-color: white;}}
+    @keyframes flashCyan    {0%, 100% {background-color: rgba(0  , 255, 255, 0.4);} 50% {background-color: white;}}
+    @keyframes flashGreen   {0%, 100% {background-color: rgba(0  , 255, 0  , 0.4);} 50% {background-color: white;}}
+    @keyframes flashYellow  {0%, 100% {background-color: rgba(255, 255, 0  , 0.4);} 50% {background-color: white;}}
+    @keyframes flashOrange  {0%, 100% {background-color: rgba(255, 165, 0  , 0.4);} 50% {background-color: white;}}
+    .buttonDispense {
       background-color: #4CAF50; /* Green background */
-      color: white;             /* White text */
-      padding: 10px 20px;       /* Padding for size */
-      border: none;             /* No border */
-      border-radius: 5px;       /* Rounded corners */
-      cursor: pointer;          /* Pointer cursor on hover */
-      font-size: 16px;          /* Font size */
+      color: white;              /* White text */
+      padding: 10px 20px;        /* Padding for size */
+      border: none;              /* No border */
+      border-radius: 5px;        /* Rounded corners */
+      cursor: pointer;           /* Pointer cursor on hover */
+      font-size: 16px;           /* Font size */
       transition: background-color 0.3s ease;} /* Smooth hover effect */
-    .button:hover {background-color: #45a049;} /* Darker green on hover */
-    .button:active {background-color: #3e8e41;} /* Even darker green on click */
+    .buttonDispense:hover {background-color: #45a049;} /* Darker green on hover */
+    .buttonDispense:active {background-color: #3e8e41;} /* Even darker green on click */
   </style>
 )";
   
-String mytest(const int& trayInstallCount) {
+String web_portal(const int& trayInstallCount) {
   String result = styles; // Includes CSS styles
-  result += "<table border='1'>\n";
-  result += "<tr><th>Tray</th><th>Name</th><th>Alert Time</th><th>Color</th><th>Alerting</th><th>Dispensed</th><th>Action</th></tr>\n";
-  String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
+  result += "<table>\n<tr><th>Tray</th><th>Name</th><th>Alert Time</th><th>Color</th><th>Alerting</th><th>Dispensed</th><th>Action</th></tr>\n";
 
   for (int i = 0; i < trayInstallCount; ++i) {
-    if (traytriggered[i+1]) {
+    if (traytriggered[i + 1]) {
       // Row in alert state with flashing animation
-      result += "<tr style=\"animation: flash" + colors[trayColor[i+1]] + " 2.5s linear infinite;\">";
+      result += "<tr style=\"animation: flash" + colorNames[trayColor[i+1]] + " 2.5s linear infinite;\">";
     } else {
       // Row not in alert state, static background color
-      result += "<tr style=\"background-color: " + String(colors[trayColor[i+1]]) + ";\">";
+      result += "<tr style=\"background-color: " + colorLightNames[trayColor[i+1]] + ";\">";
     };
     // Tray data columns
-    result += "<td>" + String(i + 1)                  + "</td>"; //tray number
-    result += "<td>" + String(trayNames[i+1])         + "</td>"; //tray name/description
-    result += "<td>" + String(getAlertTime(i+1))      + "</td>"; //alert time
-    result += "<td>" + String(colors[trayColor[i+1]]) + "</td>"; //color
-    result += "<td>" + String(traytriggered[i+1])     + "</td>"; //in alert
+    result += "<td style=\"text-align:right\">" + String(i + 1) + "</td>"; //tray number
+    result += "<td>" + String(trayNames[i+1])                   + "</td>"; //tray name/description
+    // Tray Alert Time if Enabled
+    if (trayAlertEna[i + 1]) {
+      result += "<td style=\"text-align:right\">" + String(getAlertTime(i+1)) + "</td>"; //alert time
+    } else {
+      result += "<td></td>"; //no alert time
+    }
+    result += "<td>" + String(colorNames[trayColor[i+1]]) + "</td>"; //color
+    result += "<td style=\"text-align:center\">" + String(traytriggered[i+1])         + "</td>"; //in alert
 
     // Show Dispense/Dismiss Status
     if (traydisptoday[i + 1]) {
-      result += "<td>&#9989;</td>"; //dispensed <!-- ✅ Unicode in Hex -->
+      result += "<td style=\"text-align:center\">&#9989;</td>"; //dispensed <!-- ✅ Unicode in Hex -->
     } else if (traydismtoday[i + 1]) {
-      result += "<td>&#x274E;</td>"; //dismissed <!-- ❎ Unicode in Hex -->
+      result += "<td style=\"text-align:center\">&#x274E;</td>"; //dismissed <!-- ❎ Unicode in Hex -->
     } else {
       result += "<td></td>";
     }
     
     // Dispsense Button
     if (traytriggered[i + 1] || !trayAlertEna[i + 1]) {
-      result += "<td><button onclick=\"dispense(" + String(i + 1) + ")\">Dispense</button></td>";
+      result += "<td><button class=\"buttonDispense\" onclick=\"dispense(" + String(i + 1) + ")\">Dispense</button></td>";
     } else {
       result += "<td></td>"; // Placeholder for non-alerting rows
     }
   }
-  result += "</tr>\n";
-  result += "</table>\n";
+  result += "</tr>\n</table>\n";
 
   // Add JavaScript function to handle dispense action
   result += R"rawliteral(
@@ -107,22 +135,6 @@ String mytest(const int& trayInstallCount) {
   )rawliteral";
   
   return result;
-}
-
-String web_processor(const String& var) {
-  if (var == "IP") {
-    return getIP();
-  } else if (var == "TXTDESC1") {
-    return String(trayNames[1]);
-  } else if (var == "TIMEBOX1"){
-    int hour =  trayHours[1];
-    int minute = trayMin[1];
-    char timeInput[64];
-    snprintf(timeInput, sizeof(timeInput), "%02d:%02d", hour, minute);
-    return String(timeInput);
-  } else {
-    return "pending development";
-  }
 }
 
 String processor(const String& var) {
@@ -260,90 +272,80 @@ String processor(const String& var) {
   } else if (var == "COLORBOX1") {
     String lastColor = String(trayColor[1]);
     String selectHTML = "<select name=\"color1\" id=\"color1\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX2") {
     String lastColor = String(trayColor[2]);
     String selectHTML = "<select name=\"color2\" id=\"color2\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX3") {
     String lastColor = String(trayColor[3]);
     String selectHTML = "<select name=\"color3\" id=\"color3\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX4") {
     String lastColor = String(trayColor[4]);
     String selectHTML = "<select name=\"color4\" id=\"color4\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX5") {
     String lastColor = String(trayColor[5]);
     String selectHTML = "<select name=\"color5\" id=\"color5\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX6") {
     String lastColor = String(trayColor[6]);
     String selectHTML = "<select name=\"color6\" id=\"color6\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX7") {
     String lastColor = String(trayColor[7]);
     String selectHTML = "<select name=\"color7\" id=\"color7\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX8") {
     String lastColor = String(trayColor[8]);
     String selectHTML = "<select name=\"color8\" id=\"color8\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX9") {
     String lastColor = String(trayColor[9]);
     String selectHTML = "<select name=\"color9\" id=\"color9\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
   } else if (var == "COLORBOX10") {
     String lastColor = String(trayColor[10]);
     String selectHTML = "<select name=\"color10\" id=\"color10\">";
-    String colors[] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
     for (int i = 0; i < 8; i++) {
-      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colors[i] + "</option>";
+      selectHTML += "<option value=\"" + String(i) + "\"" + (lastColor == String(i) ? " selected" : "") + ">" + colorNames[i] + "</option>";
     }
     selectHTML += "</select>";
     return selectHTML;
@@ -547,11 +549,7 @@ void webroute() {
   });
   
   server.on("/web", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/web.html", String(), false, web_processor);
-  });
-  
-  server.on("/mytest", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/html", mytest(installedTrays));
+    request->send(200, "text/html", web_portal(installedTrays));
   });
 
   server.on("/webcmd.html", HTTP_GET, [](AsyncWebServerRequest * request) {
