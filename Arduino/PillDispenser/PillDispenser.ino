@@ -113,6 +113,10 @@ DFRobotDFPlayerMini myDFPlayer;
 WiFiClientSecure secured_client;
 UniversalTelegramBot* bot = nullptr;
 
+// Log callback function
+void my_print(const char *buf) {
+    Serial.println(buf); // Print logs to Serial Monitor
+}
 
 void setup() {
   Serial.begin( 115200 );
