@@ -88,6 +88,7 @@ static void telegram_timer(lv_timer_t * timer) {
     if (!firstTray) {
       message += " is currently in progress.";
       bot->sendMessage(CHAT_ID, message, "");
+      sendSignalMessage(message);
     }
   }
   lv_timer_del(timer);

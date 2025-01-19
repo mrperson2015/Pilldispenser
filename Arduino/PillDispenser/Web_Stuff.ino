@@ -27,7 +27,34 @@ String getAlertTime(const int& tray) {
   snprintf(timeInput, sizeof(timeInput), "%02d:%02d", hour, minute);
   return String(timeInput);
 }
-// Define the size of the dictionary
+void sendSignalMessage(String message){
+
+  // Data to send with HTTP POST
+  String url = "https://signal.callmebot.com/signal/send.php?phone=" + SIGNAL_PHONE + "&apikey=" + SIGNAL_API_KEY + "&text=" + urlEncode(message);
+  
+  HTTPClient http;
+  secured_client.setInsecure();
+  http.begin(secured_client, url);
+
+  // Specify content-type header
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  
+  // Send HTTP POST request
+  int httpResponseCode = http.POST("");
+  if (httpResponseCode == 200) {
+    Serial.println("Message sent successfully");
+  } else {
+    Serial.println("Error sending the message");
+    Serial.println(url);
+    Serial.print("HTTP response code: ");
+    Serial.println(httpResponseCode);
+  }
+
+  // Free resources
+  http.end();
+}
+
+// Define the size of the color dictionary
 const int COLOR_COUNT = 8;
 // Define colors
 const String colorNames[COLOR_COUNT] = {"Red", "Magenta", "Violet", "Blue", "Cyan", "Green", "Yellow", "Orange"};
@@ -518,6 +545,16 @@ String processor(const String& var) {
     }
     selectHTML += "</select>";
     return selectHTML;
+  }  else if (var == "SIGNALPHONE") {
+    String texts = "";
+    String value = String(SIGNAL_PHONE);
+    texts += "<input maxlength=\"75\" name=\"signalPhone\" size=\"40\" type=\"text\" value=\"" + value + "\"/>";
+    return texts;
+  }  else if (var == "SIGNALAPIKEY") {
+    String texts = "";
+    String value = String(SIGNAL_API_KEY);
+    texts += "<input maxlength=\"75\" name=\"signalApiKey\" size=\"40\" type=\"text\" value=\"" + value + "\"/>";
+    return texts;
   }  else if (var == "MDNSTXT") {
     String texts = "";
     String value = String(HOSTNAME);
@@ -670,6 +707,17 @@ void webroute() {
       telegramalertinterval = valueout.toInt();
       preferences.putInt("telinterv", telegramalertinterval);
     }
+    // Handle Signal settings
+    if (request->hasParam("signalPhone")) {
+      String valueout = request->getParam("signalPhone")->value();
+      SIGNAL_PHONE = valueout;
+      preferences.putString("signal_phone", SIGNAL_PHONE.c_str());
+    }
+    if (request->hasParam("signalApiKey")) {
+      String valueout = request->getParam("signalApiKey")->value();
+      SIGNAL_API_KEY = valueout;
+      preferences.putString("signal_api_key", SIGNAL_API_KEY.c_str());
+    }
     preferences.end(); // Close the Preferences
 
 
@@ -689,6 +737,21 @@ void webroute() {
       bot->sendMessage(CHAT_ID, message, "");
       delete bot;
       bot = nullptr;
+    }
+    // Handle Signal settings
+    if (request->hasParam("signalPhone")) {
+      String valueout = request->getParam("signalPhone")->value();
+      SIGNAL_PHONE = valueout;
+      preferences.putString("signal_phone", SIGNAL_PHONE.c_str());
+    }
+    if (request->hasParam("signalApiKey")) {
+      String valueout = request->getParam("signalApiKey")->value();
+      SIGNAL_API_KEY = valueout;
+      preferences.putString("signal_api_key", SIGNAL_API_KEY.c_str());
+    }
+    if (SIGNAL_PHONE != "" && SIGNAL_API_KEY != "") {
+      String message =  "This is a test, if you see this message your phone and api key are correct.";
+      sendSignalMessage(message);
     }
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });

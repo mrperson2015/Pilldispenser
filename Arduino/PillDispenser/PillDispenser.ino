@@ -21,6 +21,8 @@
 #include <UniversalTelegramBot.h>
 #include <ArduinoJson.h>
 #include "esp_task_wdt.h"
+#include <HTTPClient.h>
+#include <UrlEncode.h>
 
 #define XPT2046_IRQ 36
 #define XPT2046_MOSI 32
@@ -38,7 +40,7 @@
 #define NUM_LEDS   2  // Number of LEDs in your strip
 
 // declaration
-String versionnumber = "v.1.8";
+String versionnumber = "v.1.9";
 String HOSTNAME;
 lv_timer_t* inactivity_timer = NULL;
 lv_timer_t* alertsound_timer = NULL;
@@ -52,6 +54,8 @@ bool systemloaded = false;
 String trayNames[11] = {"", "", "", "", "", "", "", "", "", "", ""};
 String BOT_TOKEN;
 String CHAT_ID;
+String SIGNAL_PHONE;
+String SIGNAL_API_KEY;
 String passcode;
 bool enabledpasscode = false;
 int nextaction = 0;
